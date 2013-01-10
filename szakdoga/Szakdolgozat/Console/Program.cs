@@ -144,11 +144,11 @@ namespace Console
 
             System.Console.WriteLine();
 
-            if(possible[0] == 1)    System.Console.WriteLine("0. Fold");
-            if(possible[1] == 1)    System.Console.WriteLine("1. Check");
-            if(possible[2] == 1)    System.Console.WriteLine("2. Bet");
-            if(possible[3] == 1)    System.Console.WriteLine("3. Call");
-            if(possible[4] == 1)    System.Console.WriteLine("4. Raise");
+            if (possible[0] == 1) System.Console.WriteLine("\t0. Fold");
+            if (possible[1] == 1) System.Console.WriteLine("\t1. Check");
+            if (possible[2] == 1) System.Console.WriteLine("\t2. Bet");
+            if (possible[3] == 1) System.Console.WriteLine("\t3. Call");
+            if (possible[4] == 1) System.Console.WriteLine("\t4. Raise");
 
 
             while (b)

@@ -189,10 +189,8 @@ namespace Dealer
 
 
 
-            for (int i = 0; i < 10; i++)
+           while (gameWinner == 0)
             {
-
-
                 StartHand(false);
                 SwitchBlind();
             }
@@ -229,7 +227,6 @@ namespace Dealer
             ConsoleWrite(String.Format("Computer : {0} of {1}  : {2} of {3}", ValueToRank(computer.HoleCards[0]), ValueToSuit(computer.HoleCards[0]), ValueToRank(computer.HoleCards[1]), ValueToSuit(computer.HoleCards[1])));
             ConsoleWrite("\n\n");
 
-            int asd = 0;
             //preflop
             while ((handWinner == 0) && (!nextStreet))
             {
@@ -254,10 +251,11 @@ namespace Dealer
             }
 
             //flop
-            DealFlop();
-            nextStreet = false;
-            first = true;
-
+            if (nextStreet)
+            {
+                DealFlop();
+                first = true;
+            }
             while ((handWinner == 0) && (!nextStreet))
             {
                 if (first)
@@ -272,11 +270,11 @@ namespace Dealer
             }
 
             //turn
-            DealOneCard();
-            ConsoleWrite(String.Format("\nThe Turn: {0} of {1}", ValueToRank(theTurn), ValueToSuit(theTurn)));
-            nextStreet = false;
-            first = true;
-
+            if (nextStreet)
+            {
+                DealTurn();
+                first = true;
+            }
 
 
             while ((handWinner == 0) && (!nextStreet))
@@ -293,11 +291,11 @@ namespace Dealer
             }
 
             //river
-            DealOneCard();
-            ConsoleWrite(String.Format("\nThe River: {0} of {1}", ValueToRank(theRiver), ValueToSuit(theRiver)));
-            nextStreet = false;
-            first = true;
-
+            if (nextStreet)
+            {
+                DealRiver();
+                first = true;
+            }
 
 
             while ((handWinner == 0) && (!nextStreet))
@@ -312,8 +310,9 @@ namespace Dealer
                 HandStatus();
                 CheckHandStatus(true);
             }
-            
-            
+
+
+            DisplayWinner();
             
             
 
@@ -346,6 +345,12 @@ namespace Dealer
         }
 
 
+
+        public void DisplayWinner()
+        {
+            ConsoleWrite(String.Format("\n{0} has won {1}", intToName( currentPlayer), Pot));
+        }
+
         public void CheckHandStatus(bool display)
             {
             Round actual = actions.Last<Round>();
@@ -358,7 +363,9 @@ namespace Dealer
                     handWinner = currentPlayer;
                     //currentPlayer *= -1;
                     DisplayStatus();
-                    StartHand(true);
+                    currentPlayer*= -1;
+                    return;
+                    //StartHand(true);
                 }
             }
 
@@ -452,8 +459,25 @@ namespace Dealer
             flop[1] = Deck[deckIndex++];
             flop[2] = Deck[deckIndex++];
             theFlop = flop;
+            nextStreet = false;
 
             ConsoleWrite(String.Format("The Flop: {0} of {1}, {2} of {3}, {4} of {5}", ValueToRank(theFlop[0]), ValueToSuit(theFlop[0]), ValueToRank(theFlop[1]), ValueToSuit(theFlop[1]), ValueToRank(theFlop[2]), ValueToSuit(theFlop[2])));
+        }
+
+        public void DealTurn()
+        {
+
+            DealOneCard();
+            ConsoleWrite(String.Format("\nThe Turn: {0} of {1}", ValueToRank(theTurn), ValueToSuit(theTurn)));
+            nextStreet = false;
+            
+        }
+
+        public void DealRiver()
+        {
+            DealOneCard();
+            ConsoleWrite(String.Format("\nThe River: {0} of {1}", ValueToRank(theRiver), ValueToSuit(theRiver)));
+            nextStreet = false;
         }
 
         // aktuális állapot kiküldése a soron következő játékosnak
