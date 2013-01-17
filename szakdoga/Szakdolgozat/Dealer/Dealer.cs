@@ -8,7 +8,7 @@ using System.Text;
 namespace Dealer
 {
 
-   
+   //TODO 3betet hibásan kezeli, allin esetén nem adja vissza a többet berakó pénzét
     public class Dealer
     {
       
@@ -31,9 +31,9 @@ namespace Dealer
         private int handIndex;
         private int gameWinner;
         private int handWinner;
-        private int pot;
-        private int computerStack = startingStack;
-        private int playerStack = startingStack;
+        private bool allIn;
+       
+       
         private List<Round> actions;
         private int returnedAction;
         private int handStatusListIndex;
@@ -129,10 +129,6 @@ namespace Dealer
 
            }
 
-        
-          
-         
-
           
         }
 
@@ -176,6 +172,7 @@ namespace Dealer
             Shuffle(Deck);
             deckIndex = 0;
             gameWinner = 0;
+            Pot = 0;
             pSCard = DealOneCard()%13;
             cSCard = DealOneCard()%13;
             
@@ -190,11 +187,13 @@ namespace Dealer
             SwitchBlind();
 
 
-           while (gameWinner == 0)
+            while (gameWinner == 0)
             {
                 StartHand();
-         
+
             }
+
+            ConsoleWrite(String.Format("Game Over!\n{0} Wins the Game!", intToName(gameWinner)));
          
         }
 
@@ -204,36 +203,54 @@ namespace Dealer
 
         
             
-                SwitchBlind();
-            
-           
-            ConsoleWrite("------------------New Hand--------------");
-
-            ConsoleWrite(String.Format("Small blind: {0} \nBigBlind: {1}", smallBlind, bigBlind));
-            ConsoleWrite(String.Format("Posting blinds."));
-            ConsoleWrite(String.Format("{0} posts {1}", intToName(currentPlayer *-1), bigBlindValue));
-            ConsoleWrite(String.Format("{0} posts {1}", intToName(currentPlayer), smallBlindValue));
-
-
-            
-
+            SwitchBlind();
             nextStreet = false;
             bool first = true;
             handWinner = 0;
+            allIn = false;
             Shuffle(Deck);
             deckIndex = 0;
             //preflop 1.action
             handIndex = -10;
+            
+           
+            ConsoleWrite("------------------New Hand--------------");
+            ConsoleWrite(String.Format("Player Stack: {0} \nComputer Stack: {1}\n", player.Stack,computer.Stack));
+            ConsoleWrite(String.Format("\nSmall blind: {0} \nBigBlind: {1}", smallBlind, bigBlind));
+            ConsoleWrite(String.Format("Posting blinds."));
+            ConsoleWrite(String.Format("{0} posts {1}", intToName(currentPlayer *-1), bigBlindValue));
+            ConsoleWrite(String.Format("{0} posts {1}", intToName(currentPlayer), smallBlindValue));
+
+            if ( player.Stack <= bigBlindValue || computer.Stack <= bigBlindValue)
+            {
+                allIn = true;
+
+                if (player.Stack < computer.Stack) ChipHandling(1, 0, player.Stack);
+                else ChipHandling(-1, 0, computer.Stack);
+
+            }
+            else
+            {
+                ChipHandling(currentPlayer, 0, smallBlindValue);
+                ChipHandling(currentPlayer * -1, 0, bigBlindValue);
+                ConsoleWrite(String.Format("\nPot: {0}\n", Pot));
+            }
+
+
+
+            ConsoleWrite(String.Format("Player Stack: {0} \nComputer Stack: {1}\n", player.Stack, computer.Stack));
+
+        
  
             DealHoleCards();
             ConsoleWrite(String.Format("\nPlayer : {0} of {1}  : {2} of {3}", ValueToRank(player.HoleCards[0]), ValueToSuit(player.HoleCards[0]), ValueToRank(player.HoleCards[1]), ValueToSuit(player.HoleCards[1])));
             ConsoleWrite(String.Format("Computer : {0} of {1}  : {2} of {3}", ValueToRank(computer.HoleCards[0]), ValueToSuit(computer.HoleCards[0]), ValueToRank(computer.HoleCards[1]), ValueToSuit(computer.HoleCards[1])));
             ConsoleWrite("\n\n");
 
-            
+            if (player.Stack == 0 || computer.Stack == 0) allIn = true;
 
             //preflop
-            while ((handWinner == 0) && (!nextStreet))
+            while ((handWinner == 0) && (!nextStreet) && (!allIn))
             {
                 //hand állapot elkészítése
                 if (first)
@@ -256,14 +273,15 @@ namespace Dealer
             }
 
             //flop
-            if (nextStreet)
+            if (nextStreet || allIn)
             {
                 DealFlop();
                 first = true;
                 currentPlayer *= -1;
             }
-            while ((handWinner == 0) && (!nextStreet))
+            while ((handWinner == 0) && (!nextStreet) && (!allIn))
             {
+                ConsoleWrite(String.Format("\nPot: {0}\n", Pot));
                 if (first)
                 {
                     HandStatus();
@@ -276,15 +294,16 @@ namespace Dealer
             }
 
             //turn
-            if (nextStreet)
+            if (nextStreet || allIn)
             {
                 DealTurn();
                 first = true;
             }
 
 
-            while ((handWinner == 0) && (!nextStreet))
+            while ((handWinner == 0) && (!nextStreet) && (!allIn))
             {
+                ConsoleWrite(String.Format("\nPot: {0}\n", Pot));
                 if (first)
                 {
                     HandStatus();
@@ -297,15 +316,16 @@ namespace Dealer
             }
 
             //river
-            if (nextStreet)
+            if (nextStreet || allIn)
             {
                 DealRiver();
                 first = true;
             }
 
 
-            while ((handWinner == 0) && (!nextStreet))
+            while ((handWinner == 0) && (!nextStreet) && (!allIn))
             {
+                ConsoleWrite(String.Format("\nPot: {0}\n", Pot));
                 if (first)
                 {
                     HandStatus();
@@ -316,43 +336,75 @@ namespace Dealer
                 HandStatus();
                 CheckHandStatus(true);
             }
-
-           if (handWinner == 0) Showdown(actions.Count);
+            ConsoleWrite(String.Format("\nPot: {0}\n", Pot));
+            if (handWinner == 0 || allIn) Showdown(actions.Count);
             DisplayWinner();
-           
-            
-            
 
-       
-       
-            
+            ChipHandling(0, handWinner, Pot);
 
+            if (player.Stack == 0 || computer.Stack == 0)
+            {
+                gameWinner = player.Stack > computer.Stack ? 1 : -1;
+            }
+  
             
+        }
+
+
+        public void ChipHandling(int from, int to, int value)
+        {
+            if (to == 0)
+            {
+                Pot += value;
+                if (from == 1) player.Stack -= value;
+                else computer.Stack -= value;
+            }
+            else if (to == 1)
+            {
+                Pot -= value;
+                player.Stack += value;
+            }
+            else
+            {
+                Pot -= value;
+                computer.Stack += value;
+            }
+
         }
 
 
 
         public void DisplayWinner()
         {
-            ConsoleWrite(String.Format("\n{0} has won {1}", intToName( handWinner), Pot));
+            ConsoleWrite(String.Format("\n{0} wins the pot {1}", intToName( handWinner), Pot));
+
+            
         }
 
+
+
+
+
         public void CheckHandStatus(bool display)
-            {
+        {
             Round actual = actions.Last<Round>();
+
+            if ((player.Stack == 0) || (computer.Stack == 0))
+            {
+                allIn = true;
+                return;
+            }
 
             if (handStatusListIndex >= 0)
             {
                 if (actual.S_licit[handStatusListIndex] == 0)
                 {
-                    //ha rossz anyertes ezt csere
-                    
-                    //currentPlayer *= -1;
+
                     DisplayStatus();
-                    currentPlayer*= -1;
+                    currentPlayer *= -1;
                     handWinner = currentPlayer;
                     return;
-                    //StartHand(true);
+
                 }
             }
 
@@ -363,6 +415,11 @@ namespace Dealer
                 {
                     SetHandIndex();
                     nextStreet = true;
+                    //if (actual.S_licit[handStatusListIndex] > 1)
+                    //{
+                    //    ChipHandling(currentPlayer, 0, actual.S_licit[handStatusListIndex]);
+                    //}
+
                 }
                 if (actual.S_licit[handStatusListIndex] == 1)
                 {
@@ -373,14 +430,16 @@ namespace Dealer
 
             if (display)
             {
-                
-
                 DisplayStatus();
             }
 
             currentPlayer *= -1;
 
         }
+
+      
+
+
 
         public void DisplayStatus()
         {
@@ -396,7 +455,7 @@ namespace Dealer
                 else move = "bet " + actual.S_licit[handStatusListIndex];
                 if (handStatusListIndex > 0)
                 {
-                    if ((actual.S_licit[handStatusListIndex] >= 20) && (actual.S_licit[handStatusListIndex]) == (actual.S_licit[handStatusListIndex - 1])) move = "call";
+                    if (((actual.S_licit[handStatusListIndex] >= 20) && ((actual.S_licit[handStatusListIndex]) == (actual.S_licit[handStatusListIndex - 1]) || ((actual.S_licit[handStatusListIndex]) < (actual.S_licit[handStatusListIndex - 1]))))) move = "call";
                 }
                 //preflop 1. akció esetén
                 if ((handStatusListIndex == 0) && (actions[0] == actual) && (actual.S_licit[handStatusListIndex] == 1)) move = "complete";
@@ -478,16 +537,23 @@ namespace Dealer
         // aktuális állapot kiküldése a soron következő játékosnak
         public void SendHandStatus()
         {
+            int[] returnedActionArray = new int[5];
 
             if (currentPlayer == 1)
             {
+                
                 if (actions[handIndex].S_licit == null )
                 {
                     possibleActions = CalculatePossibleActions(true);
                 }
                 else  possibleActions = CalculatePossibleActions(false);
+             //   while (true)
+            //    {
+                    ConsoleRead(possibleActions, CalculateCallValue(), player.Stack, bigBlindValue);
+         //           if(CheckReturned(returnedActionArray)) break;
+        //        }
 
-                ConsoleRead(possibleActions, CalculateCallValue(), playerStack, bigBlindValue);
+                if (returnedAction > 1) ChipHandling(currentPlayer, 0, returnedAction);
                
             }
             else
@@ -499,23 +565,125 @@ namespace Dealer
                 else possibleActions = CalculatePossibleActions(false);
 
                 //lehetőségek átadása, válasz megkapása
-                int[] returnedActionArray = computer.ReturnAction(possibleActions, CalculateCallValue());
-                //híváshiba lehet
-                //akció kiválasztása és letárolása
-                for (int i = 0; i < returnedActionArray.Length; i++)
+                while (true)
                 {
-                    if ((returnedActionArray[i] == 1) && (i == 0))  returnedAction = 0;
-                    if ((returnedActionArray[i] == 1) && (i == 1))  returnedAction = 1;
-                    if ((returnedActionArray[i]  > 1) && (i == 2))  returnedAction = returnedActionArray[i];
-                    if ((returnedActionArray[i]  > 1) && (i == 3)) returnedAction = returnedActionArray[i];
-                    if ((returnedActionArray[i]  > 1) && (i == 4)) returnedAction = returnedActionArray[i];
-
-                   
+                    returnedActionArray = computer.ReturnAction(possibleActions, CalculateCallValue());
+                    //híváshiba lehet
+                    //akció kiválasztása és letárolása
+                    for (int i = 0; i < returnedActionArray.Length; i++)
+                    {
+                        if ((returnedActionArray[i] == 1) && (i == 0)) returnedAction = 0;
+                        if ((returnedActionArray[i] == 1) && (i == 1)) returnedAction = 1;
+                        if ((returnedActionArray[i] > 1) && (i == 2)) returnedAction = returnedActionArray[i];
+                        if ((returnedActionArray[i] > 1) && (i == 3)) returnedAction = returnedActionArray[i];
+                        if ((returnedActionArray[i] > 1) && (i == 4)) returnedAction = returnedActionArray[i];
+                    }
+                    if (CheckReturned(returnedActionArray)) break;
                 }
+                
+                if (returnedAction > 1) ChipHandling(currentPlayer, 0, returnedAction);
                 
             }
 
         }
+
+
+        public bool CheckReturned(int[] returnedArray)
+        {
+            Round actual = new Round();
+            bool b = false; 
+
+            for (int i = 0; i < 5; i++)
+            {
+                if ((possibleActions[i] == 1) && (returnedArray[i] >= 1))
+                {
+                    b =  true;
+                }
+            }
+            if (b == false) return false;
+
+            if ((returnedAction == 10) && (actions[0].S_licit != null)) return true;
+            //kelle
+            //if (currentPlayer == 1)
+            //{
+            //    if (returnedAction >= player.Stack)
+            //    {
+            //        ConsoleWrite("You don't have enough money! CHECK1");
+            //        return false;
+            //    }
+            //    if ((handStatusListIndex > 0) && (returnedAction > 1))
+            //    {
+            //        if (((actual.S_licit[handStatusListIndex - 1] == 1) && (returnedAction < bigBlindValue * 2)))
+            //        {
+            //            ConsoleWrite("Wrong bet! CHECK2");
+            //            return false;
+            //        }
+            //        if (((actual.S_licit[handStatusListIndex - 1] > 1) && (returnedAction < actual.S_licit[handStatusListIndex - 1] * 2)))
+            //        {
+            //            ConsoleWrite("Wrong bet! CHECK3");
+            //            return false;
+            //        }
+            //    }
+            //    if (((actual.S_licit == null) && (returnedAction < bigBlindValue * 2) && (returnedAction > 1)))
+            //    {
+            //        ConsoleWrite("Wrong bet! CHECK4");
+            //        return false;
+            //    }
+
+            //    for (int i = 0; i < 5; i++)
+            //    {
+            //        if ((possibleActions[i] == 1) && (returnedArray[i] >= 1))
+            //        {
+            //            return true;
+            //        }
+            //    }
+
+
+            //}
+
+
+            if (currentPlayer == -1)
+            {
+                if (returnedAction >= computer.Stack)
+                {
+                    ConsoleWrite("You don't have enough money! CHECK5");
+                    return false;
+                }
+                if ((handStatusListIndex > 0) && ((returnedAction == 2) || (returnedAction == 4)))
+                {
+                    if (actual.S_licit != null)
+                    {
+                        //előző check és hibás hívás( < 20)
+                        if (((actual.S_licit[handStatusListIndex - 1] == 1) && (returnedAction < bigBlindValue )))
+                        {
+                            ConsoleWrite("Wrong bet! CHECK6");
+                            return false;
+                        }
+                        //előző hívás és hibás hívás( < x*2)
+                        if (((actual.S_licit[handStatusListIndex - 1] > 1) && (returnedAction < actual.S_licit[handStatusListIndex - 1] * 2)))
+                        {
+                            ConsoleWrite("Wrong bet! CHECK7");
+                            return false;
+                        }
+                    }
+                }
+                // 1.akció esetén ha a bet kisebb mint BB
+                if (((actual.S_licit == null) && (returnedAction < bigBlindValue ) && (returnedAction == 3)))
+                {
+                    ConsoleWrite("Wrong bet! CHECK8");
+                    return false;
+                }
+
+
+               
+            }
+               
+            return true;
+        }
+
+
+       
+
 
 
         public void Showdown(int street)
@@ -596,7 +764,7 @@ namespace Dealer
             pSumm = player.HoleCards[0] + player.HoleCards[1];
 
         
-        handWinner=  pSumm > cSumm ? 1 : -1;
+        handWinner =  pSumm > cSumm ? 1 : -1;
         ConsoleWrite(String.Format("Player: {0}\nComputer: {1}\nhandwinner: {2}", pSumm, cSumm, handWinner));
 
         }
@@ -662,9 +830,14 @@ namespace Dealer
             //ha lehet checkelni akkor nemkell számolni semmit
             if (possibleActions[1] == 1) return 0;
             //egészítése esetén
-            else if ((actions.Count == 1) && actual.S_licit == null) return smallBlindValue;
+            else if ((actions.Count == 1) && (actual.S_licit == null)) return smallBlindValue;
             // elelnkező esetben a hívás értéke az aktuális licit értéke
-            else return actual.S_licit[handStatusListIndex];
+            else if (handStatusListIndex > 0)
+            {
+                if ((actual.S_licit[handStatusListIndex - 1] > 1) && (actual.S_licit[handStatusListIndex - 1] < actual.S_licit[handStatusListIndex])) return actual.S_licit[handStatusListIndex] - actual.S_licit[handStatusListIndex-1];
+            }
+            return actual.S_licit[handStatusListIndex];
+           
         
         }
 
@@ -680,9 +853,9 @@ namespace Dealer
 
                 preflop.S_bigBlind = currentPlayer*-1;
                 preflop.S_smallBlind = currentPlayer;
-                preflop.S_cStack = computerStack;
-                preflop.S_pStack = playerStack;
-                preflop.S_pot = pot;
+                preflop.S_cStack = computer.Stack;
+                preflop.S_pStack = player.Stack;
+                preflop.S_pot = Pot;
                 handStatusListIndex = -1;   //0ról -1re
             //    preflop.SetLicit(licit);
       
@@ -700,15 +873,19 @@ namespace Dealer
 
                
 
-                actions[handIndex].S_pot=pot;
-                actions[handIndex].S_pStack = playerStack;
-                actions[handIndex].S_cStack =computerStack;
+                actions[handIndex].S_pot= Pot;
+                actions[handIndex].S_pStack = player.Stack;
+                actions[handIndex].S_cStack = computer.Stack;
 
                 if (actions[handIndex].S_licit == null)
                 {
                     List<int> licit = new List<int>();
-
-                    if (returnedAction == 10) returnedAction = 1;
+                    //nem kell?
+                    if (returnedAction == 10)
+                    {
+                        returnedAction = 1;
+                       // ChipHandling(currentPlayer, 0, 10);
+                    }
                     licit.Add(returnedAction);
 
                     // actions[handIndex].S_licit.Add(returnedAction);
@@ -727,10 +904,10 @@ namespace Dealer
                 Round flop = new Round();
 
     
-                flop.S_cStack = computerStack;
-                flop.S_pStack = playerStack;
+                flop.S_cStack = computer.Stack;
+                flop.S_pStack = player.Stack;
                 flop.S_flop = theFlop;
-                flop.S_pot = pot;
+                flop.S_pot = Pot;
                 handStatusListIndex = -1;   //0ról -1re
 
           
@@ -755,9 +932,9 @@ namespace Dealer
                 handStatusListIndex++;
                 */
                
-                actions[handIndex].S_pot = pot;
-                actions[handIndex].S_pStack = playerStack;
-                actions[handIndex].S_cStack = computerStack;
+                actions[handIndex].S_pot = Pot;
+                actions[handIndex].S_pStack = player.Stack;
+                actions[handIndex].S_cStack = computer.Stack;
                 if (actions[handIndex].S_licit == null)
                 {
                     List<int> licit = new List<int>();
@@ -777,9 +954,9 @@ namespace Dealer
 
                 Round turn = new Round();
 
-                turn.S_cStack = computerStack;
-                turn.S_pStack = playerStack;
-                turn.S_pot = pot;
+                turn.S_cStack = computer.Stack;
+                turn.S_pStack = player.Stack;
+                turn.S_pot = Pot;
                 turn.S_turn = theTurn;
                 handStatusListIndex = -1;   //0ról -1re
 
@@ -805,9 +982,9 @@ namespace Dealer
                 */
 
 
-                actions[handIndex].S_pot = pot;
-                actions[handIndex].S_pStack = playerStack;
-                actions[handIndex].S_cStack = computerStack;
+                actions[handIndex].S_pot = Pot;
+                actions[handIndex].S_pStack = player.Stack;
+                actions[handIndex].S_cStack = computer.Stack;
                 if (actions[handIndex].S_licit == null)
                 {
                     List<int> licit = new List<int>();
@@ -830,9 +1007,9 @@ namespace Dealer
                 Round river = new Round();
 
 
-                river.S_cStack = computerStack;
-                river.S_pStack = playerStack;
-                river.S_pot = pot;
+                river.S_cStack = computer.Stack;
+                river.S_pStack = player.Stack;
+                river.S_pot = Pot;
                 river.S_river = theRiver;
                 handStatusListIndex = -1;   //0ról -1re
 
@@ -858,9 +1035,9 @@ namespace Dealer
                 handStatusListIndex++;
 
              */
-                actions[handIndex].S_pot = pot;
-                actions[handIndex].S_pStack = playerStack;
-                actions[handIndex].S_cStack = computerStack;
+                actions[handIndex].S_pot = Pot;
+                actions[handIndex].S_pStack = player.Stack;
+                actions[handIndex].S_cStack = computer.Stack;
                 if (actions[handIndex].S_licit == null)
                 {
                     List<int> licit = new List<int>();

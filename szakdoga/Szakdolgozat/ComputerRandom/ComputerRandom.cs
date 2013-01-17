@@ -49,7 +49,7 @@ namespace ComputerRandom
                                 {
                                     randBetValue = rnd.Next(3, Stack / bigBlindValue);
                                     betValue = bigBlindValue * randBetValue;
-                                    array[i] = betValue;
+                                    array[i] = betValue ;
                                 }
                                 return array;
                             }

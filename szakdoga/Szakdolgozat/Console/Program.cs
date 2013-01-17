@@ -136,7 +136,7 @@ namespace Console
         }
 
 
-        public static int getAction(  int[] possible, int callValue, int stack, int bigBlindValue)
+        public static int getAction( int[] possible, int callValue, int stack, int bigBlindValue)
         {
             String read; 
             int ret = -1, option, bet;
@@ -199,20 +199,25 @@ namespace Console
                                 bet = raiseBet(stack, bigBlindValue, callValue);
                                 if (bet != 0)
                                 {
-                                    ret = bet;
+                                    ret = bet + callValue;
                                     b = false;
                                 }
                             }
                             break;
 
                     }
+                    
                 }
 
                 catch (Exception e)
                 {
                     System.Console.WriteLine("Wrong input! Please try again!");
                 }
+            
             }
+
+            if (ret > stack) ret = stack;
+           
             return ret;
         }
 
@@ -239,11 +244,12 @@ namespace Console
                         ret = 0;
                     }
 
-                    if ((bet >= callValue * 2) || (bet <= stack))
+                    else if ((bet >= callValue * 2) || (bet == stack))
                     {
                         b = false;
                         ret = bet;
                     }
+                    else System.Console.WriteLine("Wrong input! Please try again!");
 
                 }
 
@@ -251,6 +257,13 @@ namespace Console
                 {
                     System.Console.WriteLine("Wrong input! Please try again!");
                 }
+
+                if (ret > stack)
+                {
+                    b = true;
+                    System.Console.WriteLine("You don't have enough money!");
+                }
+                
             }
 
 
@@ -282,7 +295,7 @@ namespace Console
                         ret = 0;
                     }
 
-                    if ((bet >= bigBlindValue) && (bet <= stack))
+                    if ((bet >= bigBlindValue))
                     {
                         b = false;
                         ret = bet;
@@ -293,6 +306,12 @@ namespace Console
                 catch (Exception e)
                 {
                     System.Console.WriteLine("Wrong input! Please try again!");
+                }
+
+                if (ret > stack)
+                {
+                    b = true;
+                    System.Console.WriteLine("You don't have enough money!");
                 }
             }
 
