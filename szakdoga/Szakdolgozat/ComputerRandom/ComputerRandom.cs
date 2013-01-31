@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace ComputerRandom
+namespace Computer
 {
-    public class ComputerRandom
+    public class ComputerRandom: Structures.IComputer
     {
         public int Stack{ get; set;}
         private int bigBlindValue;
@@ -13,11 +13,23 @@ namespace ComputerRandom
     
         Random rnd = new Random();
 
-        public ComputerRandom(int startingStack, int bigBlind)
+
+        public void CreateComputer(int startingStack, int bigBlind)
         {
+       
             this.bigBlindValue = bigBlind;
             this.Stack = startingStack;
             this.HoleCards = new int[2];
+        }
+
+        public void setHoleCards(int[] cards)
+        {
+            HoleCards = cards;
+        }
+
+        public int getHoleCards(int index)
+        {
+            return HoleCards[index];
         }
 
 
@@ -96,5 +108,7 @@ namespace ComputerRandom
 
 
 
+
+        
     }
 }

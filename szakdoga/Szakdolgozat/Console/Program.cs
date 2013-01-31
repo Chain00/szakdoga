@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -128,10 +129,25 @@ namespace Console
 
         }
 
+
+
+
+
         public static void write(string message)
         {
                 
             System.Console.WriteLine(message);
+            
+
+            using (StreamWriter w = File.AppendText("HandHistory.txt"))
+            {
+                w.WriteLine(message);
+                w.Flush();
+                w.Close();
+            }
+
+
+          
 
         }
 
@@ -318,35 +334,35 @@ namespace Console
 
             return ret;
         }
-        
-        
-        
-        static void Main(string[] args)
+
+
+
+
+
+        private static int readComputer()
         {
-            int gameMode = 0;
+
+            int computer = 0;
             bool b = true;
             string read;
-      
-          
-
-            System.Console.WriteLine("Welcome!");
-           
- 
 
             while (b)
             {
 
-                System.Console.WriteLine("Please choose a game option!");
-                System.Console.WriteLine("(1). Player vs RandomComp ");
+                System.Console.WriteLine("Please choose a computer!");
+                System.Console.WriteLine("(1). Random(Computer) ");
+                System.Console.WriteLine("(2). Calling Station(Computer) ");
 
                 try
                 {
                     read = System.Console.ReadLine();
-                    gameMode = Convert.ToInt32(read);
-
-                    switch (gameMode)
+                    computer = Convert.ToInt32(read);
+                    //új játékos esetén bővíteni
+                    switch (computer)
                     {
                         case 1: b = false;
+                            break;
+                        case 2: b = false;
                             break;
                         default:
                             break;
@@ -358,18 +374,131 @@ namespace Console
                 }
             }
 
-            Dealer.Dealer dealer = new Dealer.Dealer(gameMode);
-            dealer.MyPrintMethod = write;
-            dealer.MyReadMethod = getAction;
-            dealer.StartGame();     
+            return computer;
+
+        }
+
+        private static int readPlayer()
+        {
+
+            int  playerMode = 0;
+            bool b = true;
+            string read; 
+
+            while (b)
+            {
+
+                System.Console.WriteLine("Please choose a game option!");
+                System.Console.WriteLine("(1). Player vs Random(Computer) ");
+                System.Console.WriteLine("(2). Player vs Calling Station(Computer) ");
+
+                try
+                {
+                    read = System.Console.ReadLine();
+                    playerMode = Convert.ToInt32(read);
+                    //új játékos esetén bővíteni
+                    switch (playerMode)
+                    {
+                        case 1: b = false;
+                            break;
+                        case 2: b = false;
+                            break;
+                        default:
+                            break;
+                    }
+                }
+                catch (Exception e)
+                {
+                    System.Console.WriteLine("Wrong Input! Please try again!");
+                }
+            }
+
+            return playerMode;
      
+        }
+
+        
+        private static int readMode()
+        {
+
+            int gameMode = 0;
+            bool b = true;
+            string read;
+
+            while (b)
+            {
+
+                System.Console.WriteLine("Please choose a game mode!");
+                System.Console.WriteLine("(1). Player vs Computer ");
+                System.Console.WriteLine("(2). Computer vs Computer ");
+
+                try
+                {
+                    read = System.Console.ReadLine();
+                    gameMode = Convert.ToInt32(read);
+
+                    if (gameMode == 1 ||gameMode == 2) b = false;
+
+                }
+                catch (Exception e)
+                {
+                    System.Console.WriteLine("Wrong Input! Please try again!");
+                }
+            }
+
+            return gameMode;
+   
+        }
+
+      
+       
+        
+        static void Main(string[] args)
+        {
+            int gameMode = 0, player = 0, computer1 = 0, computer2 = 0;
+
+           
             
 
+            System.Console.WriteLine("Welcome!");
+
+            gameMode = readMode();
+        
+            switch (gameMode)
+            {
+                case 1:
+                    {
+                        player = readPlayer();
+
+                        Dealer.Dealer dealer = new Dealer.Dealer(player);
+                        dealer.MyPrintMethod = write;
+                        dealer.MyReadMethod = getAction;
+                        dealer.StartGame();  
+                    }
+                    break;
+                case 2:
+                    {
+                        computer1 = readComputer();
+                        computer2 = readComputer();
 
 
+                        Dealer.Simulate simulate = new Dealer.Simulate(computer1, computer2);
+                        simulate.MyPrintMethod = write;
+                        simulate.StartGame();     
+     
+                    }
+                    break;
 
+                default:
+                    break;
+            }
+
+
+            System.Console.WriteLine("Game Over!");
             System.Console.ReadKey();
 
         }
+
+        
     }
 }
