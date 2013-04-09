@@ -463,7 +463,7 @@ namespace Console
             System.Console.WriteLine("Welcome!");
 
             gameMode = readMode();
-        
+            StringBuilder str = new StringBuilder();
             switch (gameMode)
             {
                 case 1:
@@ -473,7 +473,77 @@ namespace Console
                         Dealer.Dealer dealer = new Dealer.Dealer(player);
                         dealer.MyPrintMethod = write;
                         dealer.MyReadMethod = getAction;
-                        dealer.StartGame();  
+                         dealer.StartGame();
+                        //test
+
+
+
+
+
+
+
+
+
+                        //int[] t2 = { 12, 24, 23, 3, 0, 14, 2 };
+                        //Random rnd = new Random();
+                        //for (int j = 0; j < 10000; j++)
+                        //{
+                        //    int[] t = new int[7]; //= { 10, 38, 25, 39, 22, 44, 3 };
+                        //    for (int h = 0; h < 7; h++)
+                        //    {
+
+                        //        t[h] = rnd.Next(0, 51);
+                        //        str.AppendLine(String.Format("{0} | {1}, {2} ", (t[h]), dealer.ValueToRank(Convert.ToInt32(t[h])), dealer.ValueToSuit(Convert.ToInt32(t[h]))));
+
+                        //    }
+                        //    string[] result = dealer.BestHand(t);
+
+
+                        //    for (int i = 0; i < result.Length - 1; i++)
+                        //    {
+                        //        str.AppendLine(String.Format("{0} of {1} ", dealer.ValueToRank(Convert.ToInt32(result[i])), dealer.ValueToSuit(Convert.ToInt32(result[i]))));
+                        //    }
+
+                        //    str.AppendLine(result[5]);
+                        //    str.AppendLine("-------------------------------------------------");
+
+
+
+
+
+
+                        //int[] t2 = { 4, 17, 40, 27, 5, 18, 3 };
+
+                        //for (int j = 0; j < 1; j++)
+                        //{
+
+                        //    for (int h = 0; h < 7; h++)
+                        //    {
+
+
+                        //        write(String.Format("{0}, {1} ", (t2[h]), dealer.ValueToRank(Convert.ToInt32(t2[h]))));
+
+                        //    }
+                        //    string[] result = dealer.BestHand(t2);
+
+
+                        //    for (int i = 0; i < result.Length - 1; i++)
+                        //    {
+                        //        write(String.Format("{0} of {1} ", dealer.ValueToRank(Convert.ToInt32(result[i])), dealer.ValueToSuit(Convert.ToInt32(result[i]))));
+                        //    }
+
+                        //    write(result[5]);
+                        //    write("-------------------------------------------------");
+                            
+
+
+
+
+
+
+
+
+                        
                     }
                     break;
                 case 2:
@@ -493,7 +563,7 @@ namespace Console
                     break;
             }
 
-
+            write(str.ToString());
             System.Console.WriteLine("Game Over!");
             System.Console.ReadKey();
 

@@ -365,7 +365,11 @@ namespace Dealer
                 HandStatus();
                 CheckHandStatus(true);
             }
+
+
             ConsoleWrite(String.Format("\nPot: {0}\n", Pot));
+
+
             if (handWinner == 0 || allIn) Showdown(actions.Count);
             DisplayWinner();
 
@@ -393,6 +397,11 @@ namespace Dealer
                 Pot -= value;
                 player.Stack += value;
             }
+            else if (to == 2)
+            {
+                player.Stack += Pot/2;
+                computer.Stack += Pot/2;
+            }
             else
             {
                 Pot -= value;
@@ -411,7 +420,7 @@ namespace Dealer
         }
 
 
-
+        #region CheckHandStatus
 
 
         public void CheckHandStatus(bool display)
@@ -466,9 +475,10 @@ namespace Dealer
 
         }
 
-      
+        #endregion
 
 
+        #region DisplayStatus
 
         public void DisplayStatus()
         {
@@ -517,7 +527,7 @@ namespace Dealer
         }
 
 
-
+        #endregion
 
         public void SetHandIndex()
         {
@@ -562,6 +572,9 @@ namespace Dealer
             ConsoleWrite(String.Format("\nThe River: {0} of {1}", ValueToRank(theRiver), ValueToSuit(theRiver)));
             nextStreet = false;
         }
+
+        #region SendHandStatus
+
 
         // aktuális állapot kiküldése a soron következő játékosnak
         public void SendHandStatus()
@@ -616,7 +629,9 @@ namespace Dealer
 
         }
 
+        #endregion
 
+        #region CheckReturned
         public bool CheckReturned(int[] returnedArray)
         {
             Round actual = new Round();
@@ -712,23 +727,78 @@ namespace Dealer
 
 
        
-
+#endregion
 
 
         public void Showdown(int street)
         {
-            int[] pHand = new int[5];
-            int[] cHand = new int[5];
-            int index = 0;
-            int pSumm = 0, cSumm = 0;
-            cSumm = computer.getHoleCards(0) + computer.getHoleCards(1);
-            pSumm = player.HoleCards[0] + player.HoleCards[1];
-            handWinner = pSumm > cSumm ? 1 : -1;
-            ConsoleWrite(String.Format("Player: {0}\nComputer: {1}\nhandwinner: {2}", pSumm, cSumm, handWinner));
+
+            StringBuilder str = new StringBuilder();
+
+
+            int[] pHand = new int[7];
+            int[] cHand = new int[7];
+
+            string[] pResult = new string[6];
+            string[] cResult = new string[6];
+
+     
+
+
+            pHand[0] = player.getHoleCard(0);
+            pHand[1] = player.getHoleCard(1);
+            cHand[0] = computer.getHoleCards(0);
+            cHand[1] = computer.getHoleCards(1);
+
+
+            pHand[2] = theFlop[0];
+            pHand[3] = theFlop[1];
+            pHand[4] = theFlop[2];
+            pHand[5] = theTurn;
+            pHand[6] = theRiver;
+
+            
+            cHand[2] = theFlop[0];
+            cHand[3] = theFlop[1];
+            cHand[4] = theFlop[2];
+            cHand[5] = theTurn;
+            cHand[6] = theRiver;
+
+
+
+            pResult = BestHand(pHand);
+            cResult = BestHand(cHand);
+            //player hand kiir
+            str.AppendLine(String.Format("Player Hand: ") );
+            
+            for(int i = 0; i < pResult.Length -1; i++)
+            {
+		 
+                str.Append(String.Format("{0} of {1}, ", ValueToRank(Convert.ToInt32(pResult[i])), ValueToSuit(Convert.ToInt32(pResult[i]))));
+
+            }
+
+            str.Append(String.Format("  {0} ", pResult[5]));
+
+            //cmp hand kiir
+
+            str.AppendLine(String.Format("Computer Hand: ") );
+
+            for(int i = 0; i < cResult.Length -1; i++)
+            {
+		 
+                str.Append(String.Format("{0} of {1}, ", ValueToRank(Convert.ToInt32(cResult[i])), ValueToSuit(Convert.ToInt32(cResult[i]))));
+
+            }
+
+            str.Append(String.Format("  {0} ", cResult[5]));
 
 
 
 
+            ConsoleWrite(str.ToString());
+
+            handWinner = CompareHands(pResult, cResult);
 
 
             //int pValue;
@@ -750,90 +820,599 @@ namespace Dealer
 
 
 
-        public int BestHand(int who)
+        public int HandTypeToInt(string[] hand)
         {
+            int value;
 
-            uint temp, value;
-            uint[] pCards = { (uint)theFlop[0], (uint)theFlop[1], (uint)theFlop[2], (uint)theTurn, (uint)theRiver, (uint)player.HoleCards[0], (uint)player.HoleCards[1] };
-            uint[] cCards = { (uint)theFlop[0], (uint)theFlop[1], (uint)theFlop[2], (uint)theTurn, (uint)theRiver, (uint)computer.getHoleCards(0), (uint)computer.getHoleCards(1) };
-
-            Structures.HandEvaluate lap = new Structures.HandEvaluate();
-
-            if (who == 1)
+            switch (hand[5])
             {
+                case "Pair": value = 1;
+                    break;
+                case "Two Pair": value = 2;
+                    break;
+                case "Drill": value = 3;
+                    break;
+                case "Straight": value = 4;
+                    break;
+                case "Flush": value = 5;
+                    break;
+                case "Full House": value = 6;
+                    break;
+                case "Poker": value = 7;
+                    break;
+                case "Royal Flush": value = 8;
+                    break;
+                default: value = 0;
+                    break;
+            }
+
+            return value;
+        }
 
 
 
 
-                value = 0;
 
-                for (int i = 0; i < 7; i++)
+
+        public int CompareHands(string[] p, string[] c)
+        {
+            int result =100;
+            int pVaule, cValue;
+
+            pVaule = HandTypeToInt(p);
+            cValue = HandTypeToInt(c);
+
+            if (pVaule > cValue)
+            {
+                result = 1;
+                return result;
+            }
+            else if (pVaule < cValue)
+            {
+                result = -1;
+                return result;
+            }
+
+            if (pVaule == cValue)
+            {
+                for (int i = 0; i < p.Length -1; i++)
                 {
-                    for (int j = 0; j < 7; j++)
+                    if (Convert.ToInt32(p[i])%13 > Convert.ToInt32(c[i])%13)
                     {
-                        for (int f = 0; f < 7; f++)
-                        {
-                            for (int g = 0; g < 7; g++)
-                            {
-                                for (int h = 0; h < 7; h++)
-                                {
-                                    temp = lap.eval_hand_fast(pCards[i], pCards[j], pCards[f], pCards[g], pCards[h]);
-                                    if (temp > value) value = temp;
-                                }
-                            }
-                        }  
-                    } 
+                        result = 1;
+                        return result;
+                    }
+                    else if (Convert.ToInt32(p[i]) % 13 < Convert.ToInt32(c[i]) % 13)
+                    {
+                        result = -1;
+                        return result;
+                    }
                 }
 
-                
-                //temp = lap.eval_hand_fast((uint)theFlop[0], (uint)theFlop[1], (uint)theFlop[2], (uint)player.HoleCards[0], (uint)player.HoleCards[1]);
-              //  if (temp > value) value = temp;
-                //temp = lap.eval_hand_fast((uint)theFlop[0], (uint)theFlop[1], (uint)theFlop[2], (uint)player.HoleCards[0], (uint)player.HoleCards[1]);
-                //if (temp > value) value = temp;
-                //temp = lap.eval_hand_fast((uint)theFlop[0], (uint)theFlop[1], (uint)theFlop[2], (uint)theTurn, (uint)player.HoleCards[1]);
-                //if (temp > value) value = temp;
-                //temp = lap.eval_hand_fast((uint)theFlop[0], (uint)theFlop[1], (uint)theFlop[2], (uint)theTurn, (uint)player.HoleCards[0]);
-                //if (temp > value) value = temp;
-                //temp = lap.eval_hand_fast((uint)theFlop[0], (uint)theFlop[1], (uint)player.HoleCards[0], (uint)theTurn, (uint)player.HoleCards[1]);
-                //if (temp > value) value = temp;
+                result = 2;
+            }
 
 
+            return result;
+        }
+
+
+
+        public string[] BestHand(int[] hand)
+        {
+            string[] result = new string[6];
+            string[] tmp = new string[6];
+            string[] tmp2 = new string[6];
+            int[] royal = new int[7];
+            int isRoyal = 0;
+
+            //ha probléma van a sor, flush, royal kiértékeléssel az itt keletkezik; -100-ak, nem ka meg minden flush lapot
+            result = IsPoDoF(hand);
+
+            if (result[5] != "Full House" && result[5] != "Poker")
+            {
+
+                tmp = IsFlush(hand, false);
+                tmp2 = IsStraight(hand);
+
+
+                if (tmp[5] == "Flush")
+                {
+                    result = tmp;
+                    isRoyal++;
+                }
+
+                if (tmp2[5] == "Straight")
+                {
+                    if (result[5] != "Flush")
+                    {
+                        result = tmp2;
+                    }
+
+                    isRoyal++;
+                }
 
             }
 
-            else
+            if (isRoyal == 2)
             {
-               
+                for (int i = 0; i < tmp.Length-1; i++)
+                {
+                    royal[i] = Convert.ToInt32(tmp[i].ToString());
+                }
+                royal[5] = -100;
+                royal[6] = -100;
 
-                    value = 0;
-                    for (int i = 0; i < 7; i++)
+                tmp2 = IsStraight(royal);
+
+                if (tmp2[5] == "Straight")
+                {
+                    tmp2[5] = "Royal Flush";
+                    return tmp2;
+                }
+            }
+              
+
+
+            
+          
+
+            return result;
+            
+        }
+
+
+
+        //sor
+        public string[] IsStraight(int[] hand)
+        {
+
+            string[] result = new string[6];
+            string[] royal = new string[6];
+            int smallest = 100, straight = 1, leftStraight = 0, rightStraight = 0 ;
+            int[] intArray = new int[7];
+            int[] positionArray = new int[7];
+            int[] intArray2 = new int[7];
+            int ace = -1;
+            List<int> straightList = new List<int>();
+            List<int> tempStraightList = new List<int>();
+            List<int> tempList = new List<int>();
+
+
+
+       
+     
+            for (int i = 0; i < 7; i++)
+            {
+                intArray[i] = (hand[i] % 13) + 2;
+                if (intArray[i] == 14) ace = i;
+             
+            }
+
+            for (int i = 0; i < intArray.Length; i++)
+            {
+                intArray2[i] = intArray[i];
+            }
+
+       
+            Array.Sort(intArray2);
+
+            int middle = intArray2[3];
+
+            for (int i = 3; i > 0; i--)
+            {
+                if ((intArray2[i] - 1) == (intArray2[i - 1]))
+                {
+                    leftStraight++;
+                    smallest = intArray2[i - 1];
+                    straightList.Add(intArray2[i-1]);
+                }
+                else if ((intArray2[i]) == (intArray2[i - 1])) ;
+                else break;
+
+            }
+            
+            straightList.Sort();
+            straightList.Add(middle);
+
+            for (int i = 3; i < intArray2.Length-1; i++)
+            {
+                if ((intArray2[i] + 1) == (intArray2[i + 1]))
+                {
+                    rightStraight++;
+                    straightList.Add(intArray2[i+1]);
+                }
+                else if ((intArray2[i]) == (intArray2[i + 1])) ;
+                else break;
+            }
+
+            
+
+            straight = leftStraight + rightStraight + 1;
+ 
+
+
+            if (straight == 4 && smallest == 2 && ace > -1)
+            {
+                bool found = true;
+                int index = 0;
+
+                result[4] = hand[ace].ToString(); 
+
+                 for (int i = straightList.Count; i > straightList.Count - 4; i--)
+                 {
+                    while (found)
                     {
-                        for (int j = 0; j < 7; j++)
+                        for (int j = 0; j < intArray.Length; j++)
                         {
-                            for (int f = 0; f < 7; f++)
+                            if (intArray[j] == straightList[i -1])
                             {
-                                for (int g = 0; g < 7; g++)
-                                {
-                                    for (int h = 0; h < 7; h++)
-                                    {
-                                        temp = lap.eval_hand_fast(cCards[i], cCards[j], cCards[f], cCards[g], cCards[h]);
-                                        if (temp > value) value = temp;
-                                    }
-                                }
+                                result[index] = hand[j].ToString();
+                                found = false;
+                                index++;
+                                break;
                             }
                         }
                     }
+                    found = true;
+                    result[5] = "Straight";
 
+                }
+                
+            
+            }
 
+            if (straight >= 5)
+            {
+                bool found = true;
+                int index = 0;
+                for (int i = straightList.Count; i > straightList.Count - 5; i--)
+                {
+                    while (found)
+                    {
+                        for (int j = 0; j < intArray.Length; j++)
+                        {
+                            if (intArray[j] == straightList[i -1])
+                            {
+                                result[index] = hand[j].ToString();
+                                found = false;
+                                index++;
+                                break;
+                            }
+                        }
+                    }
+                    found = true;
+                }
 
+                result[5] = "Straight";
                 
             }
 
 
-            return (int)value;
+          
+            
+
+            return result;
+           
+
+            
 
 
         }
+
+
+
+
+        //pár, 2pár, drill, full, poker
+        public string[] IsPoDoF(int[] hand)
+        {
+
+
+            Array.Sort(hand);
+            string[] result = new string[6];
+            int[] t = new int[13];
+            int[] t2 = new int[13];
+            int pair = 0, drill = 0, poker = 0, d = -1, p = -1;
+            List<int> listPair = new List<int>();
+            int biggestPair = -1;
+
+
+            for (int i = 0; i < hand.Length; i++)
+            {
+                t[i] = hand[i] % 13;
+                t2[t[i]]++;
+            }
+
+            for (int i = 0; i < t2.Length; i++)
+            {
+                if (t2[i] == 2)
+                {
+                    pair++;
+                    listPair.Add(i);
+                }
+
+                if (t2[i] == 3)
+                {
+                    drill++;
+                    d = i;
+                }
+
+                if (t2[i] == 4)
+                {
+                    poker++;
+                    p = i;
+                }
+
+            }
+
+            //poker 
+
+            listPair.Sort();
+            if (listPair.Count != 0) biggestPair = listPair[listPair.Count - 1];
+            int pdfInt = 0;
+
+            List<int> l1 = new List<int>();
+
+            for (int i = 0; i < hand.Length; i++)
+            {
+                if (poker == 1)
+                {
+                    if (t[i] == p)
+                    {
+                        l1.Add(hand[i]);
+                    }
+                    result[5] = "Poker";
+                }
+
+                else if (drill > 0)
+                {
+                    if (t[i] == d)
+                    {
+                        l1.Add(hand[i]);
+                    }
+                    result[5] = "Drill";
+
+                    if ((i == (hand.Length) - 1) && (pair > 0))
+                    {
+                        for (int j = 0; j < hand.Length; j++)
+                        {
+                            if (t[j] == biggestPair)
+                            {
+                                l1.Add(hand[j]);
+                            }
+                        }
+                        result[5] = "Full House";
+                    }
+
+                }
+
+                else if (pair > 0)
+                {
+                    while (listPair.Count != 0)
+                    {
+                        biggestPair = listPair[listPair.Count - 1];
+
+                        for (int j = 0; j < hand.Length; j++)
+                        {
+                            if (biggestPair == t[j])
+                            {
+                                l1.Add(hand[j]);
+                                pdfInt++;
+                                listPair.Remove(biggestPair);
+                            }
+                            result[5] = "Pair";
+                        }
+
+                        if (pdfInt >= 4)
+                        {
+                            result[5] = "Two Pair";
+                            break;
+                        }
+                    }
+                }
+            }
+
+            //maradek lapok sorba rendezese
+
+            List<int> l2 = new List<int>();
+            List<int> l3 = new List<int>();
+
+            Array.Sort(hand);
+            foreach (var item in hand)
+            {
+                l2.Add(item);
+            }
+
+            foreach (var item in l1)
+            {
+                l2.Remove(item);
+            }
+
+            foreach (var item in l2)
+            {
+                l3.Add(item % 13);
+            }
+
+            l2.Reverse();
+            l3.Reverse();
+     
+
+            int removeIndex = 0;
+
+
+            switch (l1.Count)
+            {
+                case 0:
+                    {
+                        for (int i = 0; i < 5; i++)
+                        {
+                            removeIndex = ChooseBiggestCard(l3);
+                            l1.Add(l2[removeIndex]);
+                            l2.Remove(l2[removeIndex]);
+                            l3.Remove(l3[removeIndex]);
+                        }
+                        result[5] = "High Card " + ValueToRank(l1[0]);
+
+                    }
+                    break;
+                case 2:
+                    {
+                        for (int i = 0; i < 3; i++)
+                        {
+                            removeIndex = ChooseBiggestCard(l3);
+                            l1.Add(l2[removeIndex]);
+                            l2.Remove(l2[removeIndex]);
+                            l3.Remove(l3[removeIndex]);
+                        }
+                    }
+                    break;
+                case 3:
+                    {
+                        for (int i = 0; i < 2; i++)
+                        {
+                            removeIndex = ChooseBiggestCard(l3);
+                            l1.Add(l2[removeIndex]);
+                            l2.Remove(l2[removeIndex]);
+                            l3.Remove(l3[removeIndex]);
+                        }
+                    }
+                    break;
+                case 4:
+                    {
+
+                        removeIndex = ChooseBiggestCard(l3);
+                        l1.Add(l2[removeIndex]);
+                        l2.Remove(l2[removeIndex]);
+                        l3.Remove(l3[removeIndex]);
+
+                    }
+                    break;
+
+            }
+
+            //int g= 0;
+
+            for (int i = 0; i < 5; i++)
+            {
+                result[i] = l1[i].ToString();
+            }
+            //foreach (var item in l1)
+            //{
+            //    result[g] = item.ToString();
+            //    g++;
+            //}
+
+
+            return result;
+
+
+        }
+
+
+        //flush tesztelése
+        // ha a 2. paramétert true-ra állítjuk, a hand pedig egy sor akkor straithflush az eredmény
+        public string[] IsFlush(int[] hand, bool testRoyal)
+        {
+//todo uccso elem null lett vmiért, nem a cimke
+            string[] result = new string[6];
+
+
+           
+                Array.Sort(hand);
+                int[] tFlush = new int[7];
+                int[] t2Flush = new int[4];
+                bool b = false;
+                int Findex = 0;
+
+                for (int i = 0; i < hand.Length; i++)
+                {
+                    tFlush[i] = hand[i] / 13;
+                    t2Flush[tFlush[i]]++;
+                }
+
+                for (int i = 0; i < t2Flush.Length; i++)
+                {
+                    if (t2Flush[i] >= 5)
+                    {
+                        b = true;
+                        Findex = i;
+                        break;
+                    }
+                }
+
+                if (b)
+                {
+                    int i = 0, j = 6;
+                    while (i != 5 && j != -1)
+                    {
+                        if (hand[j] / 13 == Findex)
+                        {
+                            result[i] = hand[j].ToString();
+
+                            i++;
+                        }
+                        j--;
+                    }
+
+                    result[5] = "Flush";
+                }
+
+
+            
+
+            return result;
+
+        }
+
+
+
+        //kiválasztja a legnagyobb lapot 
+        //input l3 lista
+        //output legnagyobb elem indexe l2ben
+        public int ChooseBiggestCard(List<int> l3)
+        {
+            int biggest = 0;
+            for (int j = 12; j > 0; j--)
+            {
+                for (int i = 0; i < l3.Count; i++)
+                {
+                    //if (l3[i] == 0)
+                    //{
+                    //    biggest = i;
+                    //}
+                    //else
+                    {
+                        if (l3[i] == j) return biggest = i;
+                    }
+                }
+            }   
+            return biggest;
+        }
+
+
+
+        public int ChooseSmallestCard(List<int> l3)
+        {
+            int smallest = 0;
+            for (int j = 0; j > 0; j--)
+            {
+                for (int i = 0; i < l3.Count; i++)
+                {
+                    //if (l3[i] == 0)
+                    //{
+                    //    biggest = i;
+                    //}
+                    //else
+                    {
+                        if (l3[i] == j) return smallest = i;
+                    }
+                }
+            }
+            return smallest;
+        }
+
+
+
 
         public int[] CalculatePossibleActions(bool isNull)
         {
@@ -906,6 +1485,8 @@ namespace Dealer
            
         
         }
+
+        #region HandStatus
 
         public void HandStatus()
         {
@@ -1120,6 +1701,9 @@ namespace Dealer
 
 
         }
+
+
+        #endregion 
 
         // az osztó személyétől függően saját laopk kiosztása
         public void DealHoleCards()

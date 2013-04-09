@@ -16,5 +16,11 @@ namespace Player
             this.HoleCards = new int[2];
         }
 
+
+        public int getHoleCard(int index)
+        {
+            return HoleCards[index];
+        }
+
     }
 }
