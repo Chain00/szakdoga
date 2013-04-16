@@ -168,7 +168,7 @@ namespace Dealer
 
             for (int i = 0; i < deck.Length; i++)
             {
-                deck[i] = i+1;
+                deck[i] = i;
             }
                 
             this.Deck = deck;
@@ -185,7 +185,7 @@ namespace Dealer
             int change, index;
             for (int i = 0; i < deck.Length; i++)
             {
-                index = rnd.Next(0,52);
+                index = rnd.Next(0,51);
                 change = deck[i];
                 deck[i] = deck[index];
                 deck[index] = change;

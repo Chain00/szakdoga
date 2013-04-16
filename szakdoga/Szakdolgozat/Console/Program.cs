@@ -130,27 +130,102 @@ namespace Console
         }
 
 
-
+        
 
 
         public static void write(string message)
         {
-                
-            System.Console.WriteLine(message);
-            
 
-            using (StreamWriter w = File.AppendText("HandHistory.txt"))
+            if (message.Contains("HIBA"))
             {
                 w.WriteLine(message);
                 w.Flush();
-                w.Close();
             }
 
 
+          //  System.Console.WriteLine(message);
+            if (simulationMode == 1)
+            {
+                str.AppendLine(message);
+                if (message.Contains("Game Over"))
+                {
+                    if (message.Contains("Computer1"))
+                    {
+                        c1Win++;
+                    }
+                    else c2Win++;
+                }
+                if (str.Length > 50000 || end)
+                {
+
+                    w.WriteLine(str.ToString());
+                    w.Flush();
+                    str.Clear();
+
+                }
+
+
+            }
+
+
+
+
+
+
+            //if (message.Contains("call"))
+            //{
+                //if (message.Contains("Computer1"))
+                //{
+                //    c1Win++;
+                //}
+                //else c2Win++;
+
+
+            //}
+            //else if (message.Contains("c1Win"))
+            //{
+            //    w.WriteLine(message);
+            //    w.Flush();
+            ////}
+
+
+
+            if (simulationMode == 2  || end)
+            {
+
+                if (message.Contains("Game Over"))
+                {
+                    if (message.Contains("Computer1"))
+                    {
+                        c1Win++;
+                    }
+                    else c2Win++;
+
+
+                }
+                else if (message.Contains("c1Win"))
+                {
+                    w.WriteLine(message);
+                    w.Flush();
+                }
+            }
+
+
+
+
+
+
+
+            //w.WriteLine(message);
+            //w.Flush();
+            
           
 
         }
 
+
+
+        #region Reading
 
         public static int getAction( int[] possible, int callValue, int stack, int bigBlindValue)
         {
@@ -350,9 +425,11 @@ namespace Console
             {
 
                 System.Console.WriteLine("Please choose a computer!");
-                System.Console.WriteLine("(1). Random(Computer) ");
-                System.Console.WriteLine("(2). Calling Station(Computer) ");
-
+                System.Console.WriteLine("(1). Fold ");
+                System.Console.WriteLine("(2). Check/Fold ");
+                System.Console.WriteLine("(3). 1Bet/Call/Check ");
+                System.Console.WriteLine("(4). Check/Call ");
+                
                 try
                 {
                     read = System.Console.ReadLine();
@@ -364,8 +441,11 @@ namespace Console
                             break;
                         case 2: b = false;
                             break;
-                        default:
+                        case 3: b = false;
                             break;
+                        case 4: b = false;
+                            break;
+
                     }
                 }
                 catch (Exception e)
@@ -450,91 +530,113 @@ namespace Console
    
         }
 
-      
+
+
+
+
+        private static void readGameNumber()
+        {
+
+            bool b = true;
+            string read;
+
+            while (b)
+            {
+
+                System.Console.WriteLine("Please set the games number!");
+
+
+                try
+                {
+                    read = System.Console.ReadLine();
+                    gameNumber = Convert.ToInt32(read);
+                    b = false;
+
+                }
+                catch (Exception e)
+                {
+                    System.Console.WriteLine("Wrong Input! Please try again!");
+                }
+
+            }
+        }
+
+
+        private static void readSimulationMode()
+        {
+
+            bool b = true;
+            string read;
+
+            while (b)
+            {
+
+                System.Console.WriteLine("Please set the simulation mode!");
+                System.Console.WriteLine("(1). Full Log file ");
+                System.Console.WriteLine("(2). Result");
+
+
+
+                try
+                {
+                    read = System.Console.ReadLine();
+                    simulationMode = Convert.ToInt32(read);
+                    b = false;
+
+                }
+                catch (Exception e)
+                {
+                    System.Console.WriteLine("Wrong Input! Please try again!");
+                }
+
+            }
+
+        }
+
+
+        #endregion
+
+
+        static StringBuilder str = new StringBuilder();
+        static StreamWriter w = File.AppendText("HandHistory.txt");
+        static int simulationMode;
+        static int gameNumber;
+        static bool end = false;
+        static int c1Win = 0;
+        static int c2Win = 0;
+
+        static String[] cmpNames ={"(1). Fold ", "(2). Check/Fold ", "(3). 1Bet/Call/Check ", "(4). Check/Call "};
        
         
         static void Main(string[] args)
         {
             int gameMode = 0, player = 0, computer1 = 0, computer2 = 0;
 
-           
-            
-
-            System.Console.WriteLine("Welcome!");
-
-            gameMode = readMode();
-            StringBuilder str = new StringBuilder();
-            switch (gameMode)
+      
+            while (true)
             {
-                case 1:
-                    {
-                        player = readPlayer();
+                end = false;
+                c1Win = 0;
+                c2Win = 0;
 
-                        Dealer.Dealer dealer = new Dealer.Dealer(player);
-                        dealer.MyPrintMethod = write;
-                        dealer.MyReadMethod = getAction;
-                         dealer.StartGame();
-                        //test
+                System.Console.WriteLine("Welcome!");
 
+                gameMode = readMode();
+                StringBuilder str = new StringBuilder();
+                switch (gameMode)
+                {
+                    case 1:
+                        {
+                            player = readPlayer();
 
-
-
-
-
-
-
-
-                        //int[] t2 = { 12, 24, 23, 3, 0, 14, 2 };
-                        //Random rnd = new Random();
-                        //for (int j = 0; j < 10000; j++)
-                        //{
-                        //    int[] t = new int[7]; //= { 10, 38, 25, 39, 22, 44, 3 };
-                        //    for (int h = 0; h < 7; h++)
-                        //    {
-
-                        //        t[h] = rnd.Next(0, 51);
-                        //        str.AppendLine(String.Format("{0} | {1}, {2} ", (t[h]), dealer.ValueToRank(Convert.ToInt32(t[h])), dealer.ValueToSuit(Convert.ToInt32(t[h]))));
-
-                        //    }
-                        //    string[] result = dealer.BestHand(t);
-
-
-                        //    for (int i = 0; i < result.Length - 1; i++)
-                        //    {
-                        //        str.AppendLine(String.Format("{0} of {1} ", dealer.ValueToRank(Convert.ToInt32(result[i])), dealer.ValueToSuit(Convert.ToInt32(result[i]))));
-                        //    }
-
-                        //    str.AppendLine(result[5]);
-                        //    str.AppendLine("-------------------------------------------------");
+                            Dealer.Dealer dealer = new Dealer.Dealer(player);
+                            dealer.MyPrintMethod = write;
+                            dealer.MyReadMethod = getAction;
 
 
 
-
-
-
-                        //int[] t2 = { 4, 17, 40, 27, 5, 18, 3 };
-
-                        //for (int j = 0; j < 1; j++)
-                        //{
-
-                        //    for (int h = 0; h < 7; h++)
-                        //    {
-
-
-                        //        write(String.Format("{0}, {1} ", (t2[h]), dealer.ValueToRank(Convert.ToInt32(t2[h]))));
-
-                        //    }
-                        //    string[] result = dealer.BestHand(t2);
-
-
-                        //    for (int i = 0; i < result.Length - 1; i++)
-                        //    {
-                        //        write(String.Format("{0} of {1} ", dealer.ValueToRank(Convert.ToInt32(result[i])), dealer.ValueToSuit(Convert.ToInt32(result[i]))));
-                        //    }
-
-                        //    write(result[5]);
-                        //    write("-------------------------------------------------");
-                            
+                            dealer.StartGame();
+                            //test
 
 
 
@@ -543,29 +645,108 @@ namespace Console
 
 
 
-                        
-                    }
-                    break;
-                case 2:
-                    {
-                        computer1 = readComputer();
-                        computer2 = readComputer();
+
+                            //int[] t2 = { 12, 24, 23, 3, 0, 14, 2 };
+                            //Random rnd = new Random();
+                            //for (int j = 0; j < 10000; j++)
+                            //{
+                            //    int[] t = new int[7]; //= { 10, 38, 25, 39, 22, 44, 3 };
+                            //    for (int h = 0; h < 7; h++)
+                            //    {
+
+                            //        t[h] = rnd.Next(0, 51);
+                            //        str.AppendLine(String.Format("{0} | {1}, {2} ", (t[h]), dealer.ValueToRank(Convert.ToInt32(t[h])), dealer.ValueToSuit(Convert.ToInt32(t[h]))));
+
+                            //    }
+                            //    string[] result = dealer.BestHand(t);
 
 
-                        Dealer.Simulate simulate = new Dealer.Simulate(computer1, computer2);
-                        simulate.MyPrintMethod = write;
-                        simulate.StartGame();     
-     
-                    }
-                    break;
+                            //    for (int i = 0; i < result.Length - 1; i++)
+                            //    {
+                            //        str.AppendLine(String.Format("{0} of {1} ", dealer.ValueToRank(Convert.ToInt32(result[i])), dealer.ValueToSuit(Convert.ToInt32(result[i]))));
+                            //    }
 
-                default:
-                    break;
+                            //    str.AppendLine(result[5]);
+                            //    str.AppendLine("-------------------------------------------------");
+
+
+
+
+
+
+                            //int[] t2 = { 4, 17, 40, 27, 5, 18, 3 };
+
+                            //for (int j = 0; j < 1; j++)
+                            //{
+
+                            //    for (int h = 0; h < 7; h++)
+                            //    {
+
+
+                            //        write(String.Format("{0}, {1} ", (t2[h]), dealer.ValueToRank(Convert.ToInt32(t2[h]))));
+
+                            //    }
+                            //    string[] result = dealer.BestHand(t2);
+
+
+                            //    for (int i = 0; i < result.Length - 1; i++)
+                            //    {
+                            //        write(String.Format("{0} of {1} ", dealer.ValueToRank(Convert.ToInt32(result[i])), dealer.ValueToSuit(Convert.ToInt32(result[i]))));
+                            //    }
+
+                            //    write(result[5]);
+                            //    write("-------------------------------------------------");
+
+
+
+
+
+
+
+
+
+
+                        }
+                        break;
+                    case 2:
+                        {
+                            computer1 = readComputer();
+                            computer2 = readComputer();
+                            readGameNumber();
+                            readSimulationMode();
+
+                            w.WriteLine(String.Format("{0} vs {1} ", cmpNames[computer1 - 1], cmpNames[computer2 - 1]));
+                            w.Flush();
+
+
+
+
+                            for (int i = 0; i < gameNumber; i++)
+                            {
+                                Dealer.Simulate simulate = new Dealer.Simulate(computer1, computer2);
+                                simulate.MyPrintMethod = write;
+                                simulate.StartGame();
+                            }
+                        }
+                        break;
+
+                    default:
+                        break;
+                }
+
+                // write(str.ToString());
+                end = true;
+                write(string.Format("c1Win:{0}, c2Win:{1}", c1Win, c2Win));
+
+
+
+                System.Console.WriteLine("Game Over!");
+                System.Console.ReadKey();
+
+                
             }
 
-            write(str.ToString());
-            System.Console.WriteLine("Game Over!");
-            System.Console.ReadKey();
+            w.Close();
 
         }
 

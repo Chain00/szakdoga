@@ -40,8 +40,15 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="C1BetCall.cs" />
+    <Compile Include="CCheckCall.cs" />
+    <Compile Include="CCheckFold.cs" />
+    <Compile Include="CFold.cs" />
+    <Compile Include="ComputerBet.cs" />
     <Compile Include="ComputerCallingStation.cs" />
     <Compile Include="ComputerRandom.cs" />
+    <Compile Include="ComputerRandomV2.cs" />
+    <Compile Include="CshcCallCheck.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
